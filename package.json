@@ -1,6 +1,6 @@
 {
   "name": "solidpod-data",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "OpenClaw skill for interacting with SOLID Pods",
   "type": "module",
   "main": "scripts/solidpod-data.js",
