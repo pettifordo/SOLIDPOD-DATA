@@ -18,6 +18,7 @@ import {
   listAreas,
   createArea,
   createPod,
+  setPodUrl,
 } from "./pod.js";
 
 import {
@@ -94,7 +95,7 @@ Options:
 async function main() {
   const { positional, flags } = parseArgs(process.argv);
 
-  if (flags["pod-url"]) process.env.SOLID_POD_URL = flags["pod-url"];
+  if (flags["pod-url"]) setPodUrl(flags["pod-url"]);
 
   const [cmd, sub, ...rest] = positional;
 

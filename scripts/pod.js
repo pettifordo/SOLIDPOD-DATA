@@ -29,8 +29,15 @@ import { getAuthFetch, getWebId } from "./auth.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+let _podUrlOverride = null;
+
+/** Override the pod URL at runtime without mutating process.env. */
+export function setPodUrl(url) {
+  _podUrlOverride = url;
+}
+
 function defaultPodUrl() {
-  const url = process.env.SOLID_POD_URL;
+  const url = _podUrlOverride || process.env.SOLID_POD_URL;
   if (!url) throw new Error("SOLID_POD_URL is not set. Pass --pod-url or set the env var.");
   return url.endsWith("/") ? url : url + "/";
 }
@@ -185,7 +192,8 @@ export async function writeDataset(datasetUrl, predicate, object, log = console.
   let exists = true;
   try {
     dataset = await getSolidDataset(datasetUrl, { fetch });
-  } catch (_) {
+  } catch (e) {
+    if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] Dataset not found at ${datasetUrl}, will create: ${e.message}`);
     dataset = createSolidDataset();
     exists = false;
   }
@@ -236,7 +244,8 @@ export async function listAreas(basePodUrl, log = console.log) {
   let dataset;
   try {
     dataset = await getSolidDataset(indexUrl, { fetch });
-  } catch (_) {
+  } catch (e) {
+    if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] Area index not found at ${indexUrl}: ${e.message}`);
     log("No areas registered yet. Use: /solidpod-data area create <name>");
     return;
   }
@@ -272,7 +281,8 @@ export async function createArea(name, description, basePodUrl, log = console.lo
   let indexDataset;
   try {
     indexDataset = await getSolidDataset(indexUrl, { fetch });
-  } catch (_) {
+  } catch (e) {
+    if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] Area index not found at ${indexUrl}, will create: ${e.message}`);
     indexDataset = createSolidDataset();
   }
 

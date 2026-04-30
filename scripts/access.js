@@ -20,6 +20,7 @@ import {
   createContainerAt,
 } from "@inrupt/solid-client";
 
+import { RDF } from "@inrupt/vocab-common-rdf";
 import { getAuthFetch, getWebId } from "./auth.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ export async function requestAccess(resourceUrl, reason, log = console.log) {
   const requestUrl = containerUrl + Date.now() + ".ttl";
 
   const requestThing = buildThing(createThing({ url: requestUrl }))
-    .addUrl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ACCESS_REQUEST_TYPE)
+    .addUrl(RDF.type, ACCESS_REQUEST_TYPE)
     .addStringNoLocale(`${SOLIDPOD_DATA_NS}requestedResource`, resourceUrl)
     .addStringNoLocale(`${SOLIDPOD_DATA_NS}requester`, requesterWebId)
     .addStringNoLocale(`${SOLIDPOD_DATA_NS}reason`, reason || "(no reason given)")
@@ -135,8 +136,9 @@ export async function requestAccess(resourceUrl, reason, log = console.log) {
   // Ensure the access-requests container exists using the authenticated SOLID client
   try {
     await createContainerAt(containerUrl, { fetch });
-  } catch (_) {
+  } catch (e) {
     // Container likely already exists — continue
+    if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] createContainerAt ${containerUrl}: ${e.message}`);
   }
 
   let dataset = createSolidDataset();
