@@ -67,10 +67,10 @@ function printThing(thing, log) {
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
 export async function readDataset(url, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   let dataset;
   try {
-    dataset = await getSolidDataset(url, { fetch });
+    dataset = await getSolidDataset(url, { fetch: authFetch });
   } catch (e) {
     throw new Error(`Could not read dataset at ${url}: ${e.message}`);
   }
@@ -89,8 +89,8 @@ export async function readDataset(url, log = console.log) {
 }
 
 export async function readThing(datasetUrl, thingUrl, log = console.log) {
-  const fetch = await getAuthFetch();
-  const dataset = await getSolidDataset(datasetUrl, { fetch });
+  const authFetch = await getAuthFetch();
+  const dataset = await getSolidDataset(datasetUrl, { fetch: authFetch });
   const things = getThingAll(dataset);
   const thing = things.find(t => (getSourceUrl(t) || t.url) === thingUrl);
   if (!thing) {
@@ -101,11 +101,11 @@ export async function readThing(datasetUrl, thingUrl, log = console.log) {
 }
 
 export async function listContainer(url, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   url = ensureTrailingSlash(url);
   let dataset;
   try {
-    dataset = await getSolidDataset(url, { fetch });
+    dataset = await getSolidDataset(url, { fetch: authFetch });
   } catch (e) {
     throw new Error(`Could not list container at ${url}: ${e.message}`);
   }
@@ -127,10 +127,10 @@ export async function listContainer(url, log = console.log) {
 }
 
 export async function readPodResource(url, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   let response;
   try {
-    response = await fetch(url);
+    response = await authFetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
   } catch (e) {
     throw new Error(`Could not fetch resource at ${url}: ${e.message}`);
@@ -145,11 +145,11 @@ export async function readPodResource(url, log = console.log) {
 
 export async function podInfo(url, log = console.log) {
   url = url || defaultPodUrl();
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
 
   let dataset;
   try {
-    dataset = await getSolidDataset(url, { fetch });
+    dataset = await getSolidDataset(url, { fetch: authFetch });
   } catch (e) {
     throw new Error(`Could not fetch pod info at ${url}: ${e.message}`);
   }
@@ -175,10 +175,10 @@ export async function podInfo(url, log = console.log) {
 // ─── Write ─────────────────────────────────────────────────────────────────────
 
 export async function createContainer(url, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   url = ensureTrailingSlash(url);
   try {
-    await createContainerAt(url, { fetch });
+    await createContainerAt(url, { fetch: authFetch });
     log(`Created container: ${url}`);
   } catch (e) {
     throw new Error(`Could not create container at ${url}: ${e.message}`);
@@ -186,12 +186,12 @@ export async function createContainer(url, log = console.log) {
 }
 
 export async function writeDataset(datasetUrl, predicate, object, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
 
   let dataset;
   let exists = true;
   try {
-    dataset = await getSolidDataset(datasetUrl, { fetch });
+    dataset = await getSolidDataset(datasetUrl, { fetch: authFetch });
   } catch (e) {
     if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] Dataset not found at ${datasetUrl}, will create: ${e.message}`);
     dataset = createSolidDataset();
@@ -199,25 +199,25 @@ export async function writeDataset(datasetUrl, predicate, object, log = console.
   }
 
   const thingUrl = datasetUrl + "#data";
-  const isUrl = object.startsWith("http://") || object.startsWith("https://");
+  const isUrl = /^https?:\/\//.test(object);
   const thing = isUrl
     ? buildThing(createThing({ url: thingUrl })).addUrl(predicate, object).build()
     : buildThing(createThing({ url: thingUrl })).addStringNoLocale(predicate, object).build();
 
   dataset = setThing(dataset, thing);
-  await saveSolidDatasetAt(datasetUrl, dataset, { fetch });
+  await saveSolidDatasetAt(datasetUrl, dataset, { fetch: authFetch });
   log(`${exists ? "Updated" : "Created"} dataset: ${datasetUrl}`);
   log(`  <${thingUrl}> <${predicate}> "${object}"`);
 }
 
 
 export async function deleteResource(url, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   try {
     if (url.endsWith("/")) {
-      await deleteSolidDataset(url, { fetch });
+      await deleteSolidDataset(url, { fetch: authFetch });
     } else {
-      const res = await fetch(url, { method: "DELETE" });
+      const res = await authFetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
     }
     log(`Deleted: ${url}`);
@@ -238,12 +238,12 @@ function areaIndexUrl(basePodUrl) {
 
 export async function listAreas(basePodUrl, log = console.log) {
   basePodUrl = basePodUrl || defaultPodUrl();
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   const indexUrl = areaIndexUrl(basePodUrl);
 
   let dataset;
   try {
-    dataset = await getSolidDataset(indexUrl, { fetch });
+    dataset = await getSolidDataset(indexUrl, { fetch: authFetch });
   } catch (e) {
     if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] Area index not found at ${indexUrl}: ${e.message}`);
     log("No areas registered yet. Use: /solidpod-data area create <name>");
@@ -271,16 +271,16 @@ export async function listAreas(basePodUrl, log = console.log) {
 
 export async function createArea(name, description, basePodUrl, log = console.log) {
   basePodUrl = basePodUrl || defaultPodUrl();
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   const areaContainerUrl = ensureTrailingSlash(basePodUrl) + name + "/";
   const indexUrl = areaIndexUrl(basePodUrl);
 
-  await createContainerAt(areaContainerUrl, { fetch });
+  await createContainerAt(areaContainerUrl, { fetch: authFetch });
   log(`Created area container: ${areaContainerUrl}`);
 
   let indexDataset;
   try {
-    indexDataset = await getSolidDataset(indexUrl, { fetch });
+    indexDataset = await getSolidDataset(indexUrl, { fetch: authFetch });
   } catch (e) {
     if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] Area index not found at ${indexUrl}, will create: ${e.message}`);
     indexDataset = createSolidDataset();
@@ -295,7 +295,7 @@ export async function createArea(name, description, basePodUrl, log = console.lo
   }
 
   indexDataset = setThing(indexDataset, thing.build());
-  await saveSolidDatasetAt(indexUrl, indexDataset, { fetch });
+  await saveSolidDatasetAt(indexUrl, indexDataset, { fetch: authFetch });
   log(`Registered area "${name}" in ${indexUrl}`);
 }
 

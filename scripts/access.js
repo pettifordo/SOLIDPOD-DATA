@@ -49,11 +49,11 @@ function parseModes(modesStr) {
 // ─── Show Access ───────────────────────────────────────────────────────────────
 
 export async function showAccess(resourceUrl, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
 
   let accessMap;
   try {
-    accessMap = await getAgentAccessAll(resourceUrl, { fetch });
+    accessMap = await getAgentAccessAll(resourceUrl, { fetch: authFetch });
   } catch (e) {
     throw new Error(`Could not read access for ${resourceUrl}: ${e.message}`);
   }
@@ -76,11 +76,11 @@ export async function showAccess(resourceUrl, log = console.log) {
 // ─── Grant Access ──────────────────────────────────────────────────────────────
 
 export async function grantAccess(resourceUrl, webId, modesStr, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   const modes = parseModes(modesStr);
 
   try {
-    await setAgentAccess(resourceUrl, webId, modes, { fetch });
+    await setAgentAccess(resourceUrl, webId, modes, { fetch: authFetch });
     log(`Granted access on ${resourceUrl}`);
     log(`  Agent: ${webId}`);
     log(`  Modes: ${formatAccess(modes)}`);
@@ -92,7 +92,7 @@ export async function grantAccess(resourceUrl, webId, modesStr, log = console.lo
 // ─── Revoke Access ─────────────────────────────────────────────────────────────
 
 export async function revokeAccess(resourceUrl, webId, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
 
   const noAccess = {
     read: false,
@@ -103,7 +103,7 @@ export async function revokeAccess(resourceUrl, webId, log = console.log) {
   };
 
   try {
-    await setAgentAccess(resourceUrl, webId, noAccess, { fetch });
+    await setAgentAccess(resourceUrl, webId, noAccess, { fetch: authFetch });
     log(`Revoked all access for ${webId} on ${resourceUrl}`);
   } catch (e) {
     throw new Error(`Could not revoke access: ${e.message}`);
@@ -112,11 +112,12 @@ export async function revokeAccess(resourceUrl, webId, log = console.log) {
 
 // ─── Access Requests ───────────────────────────────────────────────────────────
 
-const ACCESS_REQUEST_TYPE = "http://www.w3.org/ns/solid/interop#AccessRequest";
+// RDF namespace URI for Solid interoperability — https:// per W3C Solid spec
+const ACCESS_REQUEST_TYPE = "https://www.w3.org/ns/solid/interop#AccessRequest";
 const SOLIDPOD_DATA_NS = "https://solidpod-data.example/ns#";
 
 export async function requestAccess(resourceUrl, reason, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   const requesterWebId = await getWebId();
 
   const podUrl = process.env.SOLID_POD_URL;
@@ -135,7 +136,7 @@ export async function requestAccess(resourceUrl, reason, log = console.log) {
 
   // Ensure the access-requests container exists using the authenticated SOLID client
   try {
-    await createContainerAt(containerUrl, { fetch });
+    await createContainerAt(containerUrl, { fetch: authFetch });
   } catch (e) {
     // Container likely already exists — continue
     if (process.env.SOLIDPOD_DATA_DEBUG) console.error(`[debug] createContainerAt ${containerUrl}: ${e.message}`);
@@ -143,7 +144,7 @@ export async function requestAccess(resourceUrl, reason, log = console.log) {
 
   let dataset = createSolidDataset();
   dataset = setThing(dataset, requestThing);
-  await saveSolidDatasetAt(requestUrl, dataset, { fetch });
+  await saveSolidDatasetAt(requestUrl, dataset, { fetch: authFetch });
 
   log(`Access request created: ${requestUrl}`);
   log(`  Requesting access to: ${resourceUrl}`);
@@ -155,12 +156,12 @@ export async function requestAccess(resourceUrl, reason, log = console.log) {
 // ─── Check My Access ───────────────────────────────────────────────────────────
 
 export async function checkMyAccess(resourceUrl, log = console.log) {
-  const fetch = await getAuthFetch();
+  const authFetch = await getAuthFetch();
   const webId = await getWebId();
 
   let access;
   try {
-    access = await getAgentAccess(resourceUrl, webId, { fetch });
+    access = await getAgentAccess(resourceUrl, webId, { fetch: authFetch });
   } catch (e) {
     throw new Error(`Could not check access for ${resourceUrl}: ${e.message}`);
   }
