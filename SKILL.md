@@ -1,6 +1,6 @@
 ---
 name: solidpod-data
-description: Interact with SOLID Pods — read data, write data, create containers, request access to topics, upload files, and provision new SOLID Pods. Supports Inrupt ESS, CSS, and any spec-compliant SOLID server.
+description: Interact with SOLID Pods — read data, write RDF data, create containers, manage access control, and provision new SOLID Pods. Supports Inrupt ESS, CSS, and any spec-compliant SOLID server.
 homepage: https://github.com/pettifordo/SOLIDPOD-DATA
 metadata: {"openclaw":{"requires":{"bins":["node"],"env":["SOLID_IDP","SOLID_CLIENT_ID","SOLID_OIDC_KEY","SOLID_POD_URL","SOLID_OIDC_ISSUER"]},"primaryEnv":"SOLID_IDP","emoji":"🪣","install":"npm install --prefix {baseDir} --omit=dev"}}
 ---
@@ -121,7 +121,7 @@ Shows storage root, owner WebID, and type info for a pod. Uses `SOLID_POD_URL` i
 ```
 /solidpod-data pod create <username> --server <css-base-url>
 ```
-Prints step-by-step registration instructions and a ready-to-run `curl` command for provisioning a new Pod on a Community Solid Server (CSS) instance. The actual registration request runs in your own shell so you retain full control over your credentials.
+Prints step-by-step registration instructions for provisioning a new Pod on a Community Solid Server (CSS) instance, including the registration endpoint URL and required fields. The actual registration is completed by the user in their own browser or shell.
 
 **Register a WebID**
 ```

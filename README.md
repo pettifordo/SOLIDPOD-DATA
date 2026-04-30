@@ -16,10 +16,9 @@ SOLID (Social Linked Data) lets you store your data in a Pod you control. Apps a
 |---|---|
 | Read RDF datasets & Things | `read`, `thing` |
 | List containers | `list` |
-| Read files | `file` |
+| Read pod resources | `resource` |
 | Create containers / areas | `mkdir`, `area create` |
 | Write RDF data | `write` |
-| Upload files | `upload` |
 | Delete resources | `delete` |
 | View & manage access (WAC/ACP) | `acl show/grant/revoke` |
 | Request access to topics | `acl request`, `area request` |
@@ -48,7 +47,7 @@ npm install
 ```bash
 export SOLID_IDP=https://login.inrupt.com
 export SOLID_CLIENT_ID=your-client-id
-export SOLID_CLIENT_SECRET=your-client-secret
+export SOLID_OIDC_KEY=your-oidc-key
 export SOLID_POD_URL=https://storage.inrupt.com/your-pod-id/
 ```
 
@@ -66,9 +65,6 @@ node scripts/solidpod-data.js pod info
 
 # Create an area called "finance"
 /solidpod-data area create finance --description "Financial records"
-
-# Upload a file
-/solidpod-data upload ./invoice.pdf https://mypod.inrupt.net/finance/invoice.pdf
 
 # Grant a friend read access
 /solidpod-data acl grant https://mypod.inrupt.net/finance/ https://friend.solidcommunity.net/profile/card#me read
@@ -93,20 +89,9 @@ SolidPod-Data/
 │   ├── solidpod-data.js  # CLI dispatcher
 │   ├── pod.js            # Core pod operations
 │   ├── auth.js           # Client credentials authentication
-│   ├── access.js         # WAC/ACP access control
-│   └── mcp-server.js     # MCP JSON-RPC server (future-ready)
+│   └── access.js         # WAC/ACP access control
 └── README.md
 ```
-
-## MCP Server
-
-SolidPod-Data includes a full [Model Context Protocol](https://modelcontextprotocol.io/) server scaffold. Run it as a standalone MCP server:
-
-```bash
-node scripts/mcp-server.js
-```
-
-All 15 SOLID operations are exposed as MCP tools, ready to be used by any MCP-compatible client (Claude Desktop, etc.) once OpenClaw adds native MCP support.
 
 ## Security
 
@@ -120,7 +105,6 @@ All 15 SOLID operations are exposed as MCP tools, ready to be used by any MCP-co
 - [`@inrupt/solid-client`](https://github.com/inrupt/solid-client-js) — SOLID data operations
 - [`@inrupt/solid-client-authn-node`](https://github.com/inrupt/solid-client-authn-js) — Client credentials auth
 - [`@inrupt/vocab-common-rdf`](https://github.com/inrupt/solid-common-vocab-rdf) — RDF vocabulary constants
-- [`mime-types`](https://github.com/jshttp/mime-types) — MIME type detection for uploads
 
 ## License
 
