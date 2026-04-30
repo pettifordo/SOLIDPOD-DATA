@@ -1,0 +1,4 @@
+# Files excluded from ClawHub publish/scan
+# The MCP server is a future-facing optional component.
+# It lives in the repo but is not part of the installable skill.
+mcp/
